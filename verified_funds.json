@@ -1,0 +1,227 @@
+{
+  "Nippon India Large Cap": {
+    "schemeCode": 118632,
+    "schemeName": "Nippon India Large Cap Fund - Direct Plan - Growth Option",
+    "category": "Large Cap"
+  },
+  "ICICI Prudential Bluechip": {
+    "schemeCode": 120586,
+    "schemeName": "ICICI Prudential Large Cap Fund (erstwhile Bluechip Fund) - Direct Plan - Growth",
+    "category": "Large Cap"
+  },
+  "SBI Large Cap Fund": {
+    "schemeCode": 119598,
+    "schemeName": "SBI Large Cap Fund - Direct Plan - Growth",
+    "category": "Large Cap"
+  },
+  "Mirae Asset Large Cap": {
+    "schemeCode": 118825,
+    "schemeName": "Mirae Asset Large Cap Fund - Direct Plan - Growth",
+    "category": "Large Cap"
+  },
+  "HDFC Large Cap": {
+    "schemeCode": 119018,
+    "schemeName": "HDFC Large Cap Fund - Direct Plan - Growth Option",
+    "category": "Large Cap"
+  },
+  "Parag Parikh Flexi Cap": {
+    "schemeCode": 122639,
+    "schemeName": "Parag Parikh Flexi Cap Fund - Direct Plan - Growth",
+    "category": "Flexi Cap"
+  },
+  "HDFC Flexi Cap": {
+    "schemeCode": 118955,
+    "schemeName": "HDFC Flexi Cap Fund - Direct Plan - Growth Option",
+    "category": "Flexi Cap"
+  },
+  "Kotak Flexi Cap Fund": {
+    "schemeCode": 120166,
+    "schemeName": "Kotak Flexi Cap Fund - Direct Plan - Growth",
+    "category": "Flexi Cap"
+  },
+  "UTI Flexi Cap": {
+    "schemeCode": 120662,
+    "schemeName": "UTI - Flexi Cap Fund. - Direct Plan - Growth",
+    "category": "Flexi Cap"
+  },
+  "Franklin India Flexi Cap": {
+    "schemeCode": 118535,
+    "schemeName": "Franklin India Flexi Cap Fund - Direct Plan - Growth",
+    "category": "Flexi Cap"
+  },
+  "Motilal Oswal Large and Midcap": {
+    "schemeCode": 147704,
+    "schemeName": "Motilal Oswal Large and Midcap Fund - Direct Plan - Growth",
+    "category": "Large & Mid Cap"
+  },
+  "Mirae Asset Large and Midcap": {
+    "schemeCode": 118834,
+    "schemeName": "Mirae Asset Large & Midcap Fund - Direct Plan - Growth",
+    "category": "Large & Mid Cap"
+  },
+  "Kotak Large & Mid Cap Fund": {
+    "schemeCode": 120158,
+    "schemeName": "Kotak Large & Mid Cap Fund - Direct Plan - Growth",
+    "category": "Large & Mid Cap"
+  },
+  "HDFC Mid Cap Fund": {
+    "schemeCode": 118989,
+    "schemeName": "HDFC Mid Cap Fund - Direct Plan - Growth Option",
+    "category": "Mid Cap"
+  },
+  "Kotak Mid Cap Fund": {
+    "schemeCode": 119775,
+    "schemeName": "Kotak Mid Cap Fund - Direct Plan - Growth",
+    "category": "Mid Cap"
+  },
+  "Nippon India Growth Mid Cap": {
+    "schemeCode": 118668,
+    "schemeName": "Nippon India Growth Mid Cap Fund - Direct Plan - Growth Option",
+    "category": "Mid Cap"
+  },
+  "Motilal Oswal Midcap": {
+    "schemeCode": 127042,
+    "schemeName": "Motilal Oswal Midcap Fund - Direct Plan - Growth",
+    "category": "Mid Cap"
+  },
+  "Axis Midcap": {
+    "schemeCode": 120505,
+    "schemeName": "Axis Midcap Fund - Direct Plan - Growth Option",
+    "category": "Mid Cap"
+  },
+  "Nippon India Small Cap": {
+    "schemeCode": 118778,
+    "schemeName": "Nippon India Small Cap Fund - Direct Plan - Growth Option",
+    "category": "Small Cap"
+  },
+  "SBI Small Cap": {
+    "schemeCode": 125497,
+    "schemeName": "SBI SMALL CAP FUND - Direct Plan - Growth",
+    "category": "Small Cap"
+  },
+  "HDFC Small Cap": {
+    "schemeCode": 130503,
+    "schemeName": "HDFC Small Cap Fund - Direct Plan - Growth Option",
+    "category": "Small Cap"
+  },
+  "Axis Small Cap": {
+    "schemeCode": 125354,
+    "schemeName": "Axis Small Cap Fund - Direct Plan - Growth Option",
+    "category": "Small Cap"
+  },
+  "Bandhan Small Cap": {
+    "schemeCode": 147946,
+    "schemeName": "BANDHAN Small Cap Fund - Direct Plan - Growth",
+    "category": "Small Cap"
+  },
+  "Nippon India Multi Cap": {
+    "schemeCode": 118650,
+    "schemeName": "Nippon India Multi Cap Fund - Direct Plan - Growth Option",
+    "category": "Multi Cap"
+  },
+  "Quant Active": {
+    "schemeCode": 120823,
+    "schemeName": "Quant Multi Cap Fund - Direct Plan - Growth Option",
+    "category": "Multi Cap"
+  },
+  "Axis ELSS Tax Saver Fund": {
+    "schemeCode": 120503,
+    "schemeName": "Axis ELSS- Tax Saver Fund - Direct Plan - Growth Option",
+    "category": "ELSS"
+  },
+  "Mirae Asset Tax Saver": {
+    "schemeCode": 135781,
+    "schemeName": "Mirae Asset ELSS Tax Saver Fund - Direct Plan - Growth",
+    "category": "ELSS"
+  },
+  "Quant Tax Plan": {
+    "schemeCode": 120847,
+    "schemeName": "Quant ELSS Tax Saver Fund - Direct Plan - Growth Option",
+    "category": "ELSS"
+  },
+  "SBI ELSS Tax Saver Fund": {
+    "schemeCode": 119723,
+    "schemeName": "SBI ELSS Tax Saver Fund - Direct Plan - Growth",
+    "category": "ELSS"
+  },
+  "ICICI Prudential Value Discovery": {
+    "schemeCode": 120323,
+    "schemeName": "ICICI Prudential Value Fund (erstwhile Value Discovery Fund) - Direct Plan - Growth",
+    "category": "Value / Contra"
+  },
+  "UTI Value Fund": {
+    "schemeCode": 120751,
+    "schemeName": "UTI Value Fund - Direct Plan - Growth",
+    "category": "Value / Contra"
+  },
+  "SBI Focused Fund": {
+    "schemeCode": 119727,
+    "schemeName": "SBI FOCUSED FUND - Direct Plan - Growth",
+    "category": "Focused"
+  },
+  "HDFC Focused": {
+    "schemeCode": 118950,
+    "schemeName": "HDFC Focused Fund - Direct Plan - Growth Option",
+    "category": "Focused"
+  },
+  "UTI Nifty 50 Index Fund": {
+    "schemeCode": 120716,
+    "schemeName": "UTI Nifty 50 Index Fund - Direct Plan - Growth",
+    "category": "Index"
+  },
+  "HDFC Index Fund Sensex": {
+    "schemeCode": 119065,
+    "schemeName": "HDFC BSE Sensex Index Fund - Direct Plan - Growth Option",
+    "category": "Index"
+  },
+  "UTI Nifty Next 50 Index": {
+    "schemeCode": 143341,
+    "schemeName": "UTI - Nifty Next 50 Index Fund - Direct Plan - Growth",
+    "category": "Index"
+  },
+  "Motilal Oswal Nifty Midcap 150 Index": {
+    "schemeCode": 147622,
+    "schemeName": "Motilal Oswal Nifty Midcap 150 Index Fund - Direct Plan - Growth",
+    "category": "Index"
+  },
+  "Nippon India Nifty Smallcap 250 Index": {
+    "schemeCode": 148519,
+    "schemeName": "Nippon India Nifty Smallcap 250 Index Fund - Direct Plan - Growth Option",
+    "category": "Index"
+  },
+  "Nippon India Nifty 500 Momentum 50 Index": {
+    "schemeCode": 152881,
+    "schemeName": "Nippon India Nifty 500 Momentum 50 Index Fund - Direct Plan - Growth Option",
+    "category": "Index"
+  },
+  "UTI Nifty 500 Value 50 Index": {
+    "schemeCode": 151739,
+    "schemeName": "UTI Nifty 500 Value 50 Index Fund - Direct Plan - Growth",
+    "category": "Index"
+  },
+  "HDFC Balanced Advantage": {
+    "schemeCode": 118968,
+    "schemeName": "HDFC Balanced Advantage Fund - Direct Plan - Growth Option",
+    "category": "Hybrid"
+  },
+  "HDFC Liquid Fund": {
+    "schemeCode": 119091,
+    "schemeName": "HDFC Liquid Fund - Direct Plan - Growth Option",
+    "category": "Debt"
+  },
+  "ICICI Prudential Short Term Fund": {
+    "schemeCode": 120754,
+    "schemeName": "ICICI Prudential Short Term Fund - Direct Plan - Growth",
+    "category": "Debt"
+  },
+  "ICICI Prudential US Bluechip Equity": {
+    "schemeCode": 120186,
+    "schemeName": "ICICI Prudential US Bluechip Equity Fund - Direct Plan - Growth",
+    "category": "International"
+  },
+  "Motilal Oswal Nasdaq 100 FOF": {
+    "schemeCode": 145552,
+    "schemeName": "Motilal Oswal Nasdaq 100 Fund of Fund - Direct Plan - Growth",
+    "category": "International"
+  }
+}

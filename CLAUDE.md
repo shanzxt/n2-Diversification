@@ -80,6 +80,36 @@ schemecodes.py  →  verified_funds.json  →  fetchfunddata.py  →  funds_data
 
 **Last updated:** 2026-09-17
 
+**Phase: 2 — Interactive fund-picker tool, built and live in the Shan
+website repo (`github.com/shanzxt/Shan`, `D:\Shan\Shan\Website`).**
+
+- The math engine (`js/overlap.js`, `maths.js`, `eigen.js`,
+  `confidence.js`, `portfolioMath.js`) was ported as-is (ESM conversion
+  only, no reimplemented math) into `src/lib/portfolioEngine/` in the
+  Shan repo, bundled with `funds_aligned.json` as a native Vite JSON
+  import — all computation (correlation, covariance, eigenvalues,
+  effective N) runs live in the browser, no backend. Full 14/14 test
+  parity confirmed with `node --test` in the new location.
+  `funds_aligned.json`, not `funds_data.json`, is the shape actually
+  bundled — see GOTCHAS.md gotcha #19 for why.
+- Live at `/portfolio`, continuing directly below the existing intro
+  animation (not a separate page): pick funds from the 45-fund universe
+  with a searchable/filterable list, adjust weights via debounced
+  sliders, two preset buttons reproducing the exact thesis numbers
+  (all-equity effective N ≈ 1.243, +debt fund effective N ≈ 1.661), a
+  custom SVG correlation heatmap (amber/teal/dark-bg, single-hover-
+  listener design after fixing an early freeze — GOTCHAS.md gotcha #20),
+  a stats panel (annualized return/std dev/Sharpe, effective-N headline),
+  and confidence-flag tooltips surfaced from the engine's existing
+  output. Verified live: manual add/remove, weight-slider drag +
+  debounce, search filtering, both presets producing exact expected
+  effective-N values, confidence flags rendering correctly.
+- **Not yet visually confirmed: narrow-viewport responsiveness** — code
+  looks correct (Tailwind responsive classes throughout) but couldn't be
+  verified visually due to a Chrome browser-automation `resize_window`
+  tooling limitation; flagged as an open caution, not a known bug.
+- Committed and pushed to `main` in the Shan repo (`0c3046a`).
+
 **Phase: 1 — Client-side math engine, complete in both Python and JS.**
 
 - Built and validated (Python): input conventions (aligned fund JSON,
@@ -117,10 +147,7 @@ schemecodes.py  →  verified_funds.json  →  fetchfunddata.py  →  funds_data
   factor). This is the newsletter's core claim, and it's now backed by a
   real computation on real fund data, cross-validated Python-vs-JS,
   rather than an assertion.
-- **Not yet started: Phase 2 — interactive animation/visualization** (a
-  UI/UX prototype in an isolated sandbox, wiring the JS math engine up
-  to the toy-dataset → mean/stdev → portfolio-risk-formula animation
-  described in `../Ideas.txt`). This is the actual next unstarted phase.
+- **Phase 2 now built** — see the Phase 2 status block above.
 
 **Phase: 0 — Data pipeline.**
 

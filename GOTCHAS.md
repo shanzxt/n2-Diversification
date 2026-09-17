@@ -441,3 +441,66 @@ diversification thesis, not just an assertion.
   directly in `overlap.test.js` (rather than round-tripping through
   Python) since this is testing error-throwing behavior identical in
   both languages, not a golden numeric value.
+
+## Interactive fund-picker tool built in the Shan website repo — session of 2026-09-17
+
+### 19. `funds_data.json` vs `funds_aligned.json` — the UI ships the latter, not the file named in the original spec
+
+**Problem:** the original build spec for the fund-picker tool named
+`funds_data.json` (the Step-2 pipeline output described in `CLAUDE.md`)
+as the dataset to bundle into the browser build. But the JS math engine
+(`js/overlap.js` onward, per-fund `computePortfolioStats` call signature)
+is built against the *aligned*, shared-date-grid shape produced for the
+Python/JS parity work, not the raw per-fund `{months[], returns[]}` shape
+`funds_data.json` ships.
+
+**Root cause:** two different downstream consumers evolved different
+expected shapes from the same underlying NAV data — `funds_data.json` is
+the general-purpose Step-2 artifact any consumer could reshape as
+needed; `funds_aligned.json` is a shape specific to the overlap-window /
+covariance-matrix math the engine (and thus the fund-picker UI) actually
+requires as input.
+
+**Fix:** bundled `funds_aligned.json` (148KB, native Vite JSON import) into
+the Shan repo, not `funds_data.json`. No new data — same underlying NAV
+history, already-aligned shape. Flagged explicitly rather than silently
+swapped, since it's a deviation from the literal spec.
+
+**Status:** working as intended; if a future consumer needs the
+`funds_data.json` shape instead, treat this as two legitimate, differently
+shaped artifacts from the same source, not a bug to reconcile.
+
+### 20. Correlation heatmap: per-cell hover listeners froze the tab on ~8+ selected funds
+
+**Problem:** initial `CorrelationHeatmap.jsx` implementation attached
+`onMouseEnter`/`onMouseLeave`/`onTouchStart` to every individual SVG
+`<rect>` cell (up to n² = 64 listeners for 8 selected funds). Hovering
+across the grid caused the browser tab to become unresponsive
+(`Page.captureScreenshot` timing out during testing), and screenshots
+taken in that state showed garbled, tiled, duplicated tooltip text
+filling the viewport.
+
+**Root cause:** per-cell enter/leave listeners thrash as the pointer
+crosses adjacent cell boundaries within a single mousemove, and combined
+with `motion.rect`'s per-cell enter animation re-triggering on every
+re-render, overwhelmed the render loop at higher fund counts.
+
+**Fix:** replaced all per-cell listeners with a single
+`onMouseMove`/`onMouseLeave`/`onTouchStart` handler on the parent `<svg>`,
+computing the hovered cell from pointer position via
+`getBoundingClientRect()` + `viewBox`-scale coordinate math
+(`cellFromEvent` in `CorrelationHeatmap.jsx`), and downgraded cells from
+`motion.rect` to plain `rect` (no per-cell entrance animation needed).
+
+**Note for future debugging:** the "duplicated/tiled content" screenshot
+symptom reappeared once more later (hovering a confidence-flag tooltip in
+`StatsPanel.jsx`) immediately after another CDP screenshot timeout. Cross-
+checked against the actual DOM text (not a screenshot) and found the page
+was entirely clean — that symptom is a stale/tiled compositor buffer
+returned by the browser-automation screenshot tool after a timeout, not a
+real rendering bug. Worth remembering: a garbled screenshot right after a
+capture timeout should be cross-verified against actual DOM content before
+concluding there's a real application bug.
+
+**Status:** fixed and verified live (hover works correctly at 9 selected
+funds, correct tooltip values, no freeze).

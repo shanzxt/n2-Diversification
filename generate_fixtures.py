@@ -1,0 +1,109 @@
+"""
+Generates js/fixtures.json — known-correct outputs from the current,
+validated Python math engine, used as golden values for the JS port
+(js/*.js + js/*.test.js) to check itself against.
+
+Rerun this whenever the underlying data (funds_aligned.json) or the
+Python reference implementation changes, so the JS tests are always
+checked against up-to-date expected values rather than hand-copied,
+stale numbers.
+"""
+
+import json
+
+from overlap import get_overlap_window
+from maths import (
+    EXCLUDED_FUND_IDS,
+    compute_mean_vector,
+    compute_std_vector,
+    compute_covariance_matrix,
+    compute_correlation_matrix,
+)
+from eigen import jacobi_eigen, compute_effective_n, correlation_dict_to_matrix
+from portfolio import compute_portfolio_stats
+
+
+def main():
+    with open("funds_aligned.json", "r") as f:
+        data = json.load(f)
+
+    fixtures = {}
+
+    # --- Toy 3-fund correlation matrix (same as eigen.py's __main__) ---
+    toy_corr = [
+        [1.0, 0.9, 0.1],
+        [0.9, 1.0, 0.1],
+        [0.1, 0.1, 1.0],
+    ]
+    toy_eigenvalues, _ = jacobi_eigen(toy_corr)
+    toy_effective_n = compute_effective_n(toy_eigenvalues)
+    fixtures["toy_3fund"] = {
+        "correlation_matrix": toy_corr,
+        "eigenvalues": sorted(toy_eigenvalues, reverse=True),
+        "effective_n": toy_effective_n,
+    }
+
+    # --- get_overlap_window: three cases from overlap.py's own __main__ ---
+    all_ids = [f["id"] for f in data["funds"]]
+    fixtures["overlap_window"] = {
+        "all_44_funds": {
+            "fund_ids": all_ids,
+            "result": get_overlap_window(all_ids, data),
+        },
+        "first_two_funds": {
+            "fund_ids": all_ids[:2],
+            "result": get_overlap_window(all_ids[:2], data),
+        },
+        "single_fund_119091": {
+            "fund_ids": [119091],
+            "result": get_overlap_window([119091], data),
+        },
+    }
+
+    # --- Fund 118632's standalone mean/std over the current window ---
+    fund_ids = [f["id"] for f in data["funds"] if f["id"] not in EXCLUDED_FUND_IDS]
+    window = get_overlap_window(fund_ids, data)
+    means = compute_mean_vector(fund_ids, window, data)
+    stds = compute_std_vector(fund_ids, window, data, means=means)
+    cov = compute_covariance_matrix(fund_ids, window, data, means=means)
+    corr = compute_correlation_matrix(fund_ids, window, data, means=means, stds=stds, cov=cov)
+
+    fixtures["fund_118632_standalone"] = {
+        "mean": means[118632],
+        "std": stds[118632],
+    }
+
+    # --- Specific correlation matrix cells ---
+    fixtures["correlation_cells"] = {
+        "corr_152881_151739": corr[152881][151739],
+        "corr_119091_118632": corr[119091][118632],
+    }
+
+    # --- Full 44-fund effective N and top eigenvalue ---
+    matrix = correlation_dict_to_matrix(corr, fund_ids)
+    eigenvalues, _ = jacobi_eigen(matrix)
+    eigenvalues_sorted = sorted(eigenvalues, reverse=True)
+    fixtures["full_universe_eigen"] = {
+        "n_funds": len(fund_ids),
+        "effective_n": compute_effective_n(eigenvalues),
+        "top_eigenvalue": eigenvalues_sorted[0],
+    }
+
+    # --- 7/8-fund thesis-test effective-N pair (portfolio.py's __main__) ---
+    all_equity = {118632: 1, 118955: 1, 120166: 1, 118834: 1, 120158: 1, 118989: 1, 119775: 1}
+    with_debt = {**all_equity, 119091: 1}
+    equity_stats = compute_portfolio_stats(all_equity, fund_ids, window, data, means=means, stds=stds, cov=cov, corr=corr)
+    mixed_stats = compute_portfolio_stats(with_debt, fund_ids, window, data, means=means, stds=stds, cov=cov, corr=corr)
+    fixtures["thesis_test"] = {
+        "all_equity_effective_n": equity_stats["effective_n"],
+        "equity_plus_debt_effective_n": mixed_stats["effective_n"],
+    }
+
+    with open("js/fixtures.json", "w") as f:
+        json.dump(fixtures, f, indent=2)
+
+    print("Wrote js/fixtures.json")
+
+
+if __name__ == "__main__":
+    main()

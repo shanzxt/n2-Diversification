@@ -68,7 +68,7 @@ def main():
     cov = compute_covariance_matrix(fund_ids, window, data, means=means)
     corr = compute_correlation_matrix(fund_ids, window, data, means=means, stds=stds, cov=cov)
 
-    fixtures["fund_118632_standalone"] = {
+    fixtures["fund_118632_within_44_fund_window"] = {
         "mean": means[118632],
         "std": stds[118632],
     }
@@ -77,6 +77,28 @@ def main():
     fixtures["correlation_cells"] = {
         "corr_152881_151739": corr[152881][151739],
         "corr_119091_118632": corr[119091][118632],
+    }
+
+    # --- Small multi-fund case (maths.js layer): exercises full mean/std/
+    # covariance/correlation matrices and the sanity-check functions
+    # together, in a fixed fund_ids order, so the JS test can catch a Map
+    # (or object-key) ordering bug that single-cell fixtures above would
+    # miss. Mix of equity funds + the low-variance debt fund (119091).
+    small_ids = [118632, 118955, 119091]
+    small_window = get_overlap_window(small_ids, data)
+    small_means = compute_mean_vector(small_ids, small_window, data)
+    small_stds = compute_std_vector(small_ids, small_window, data, means=small_means)
+    small_cov = compute_covariance_matrix(small_ids, small_window, data, means=small_means)
+    small_corr = compute_correlation_matrix(
+        small_ids, small_window, data, means=small_means, stds=small_stds, cov=small_cov
+    )
+    fixtures["maths_small_multi_fund"] = {
+        "fund_ids": small_ids,
+        "window": small_window,
+        "means": small_means,
+        "stds": small_stds,
+        "covariance_matrix": {str(a): {str(b): small_cov[a][b] for b in small_ids} for a in small_ids},
+        "correlation_matrix": {str(a): {str(b): small_corr[a][b] for b in small_ids} for a in small_ids},
     }
 
     # --- Full 44-fund effective N and top eigenvalue ---

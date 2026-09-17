@@ -237,8 +237,52 @@
     "effective_n": 2.0402912374157536,
     "top_eigenvalue": 37.493217031771465
   },
+  "portfolio_single_fund_validation": {
+    "test_fid": 118632,
+    "portfolio_monthly_return": 0.003208681818181819,
+    "portfolio_monthly_std": 0.042003270739297216,
+    "expected_mean": 0.003208681818181819,
+    "expected_std": 0.042003270739297216
+  },
+  "portfolio_normalization_validation": {
+    "raw_weights": {
+      "118632": 3.0,
+      "118955": 1.0
+    },
+    "pre_normalized_weights": {
+      "118632": 0.75,
+      "118955": 0.25
+    },
+    "raw_weights_return": 0.003957909090909091,
+    "normalized_return": 0.003957909090909091
+  },
   "thesis_test": {
     "all_equity_effective_n": 1.2431758154172698,
     "equity_plus_debt_effective_n": 1.6605580942449014
+  },
+  "confidence_flags": {
+    "portfolio_window_note": {
+      "reason": "short_shared_window",
+      "detail": "All stats in this selection are computed over a shared window of only 22 months (2024-11 to 2026-08), even though most funds here have far longer individual histories. This is driven by fund 152881, which only has 22 months of its own history and sets the floor for the whole selection."
+    },
+    "flags_152881": [
+      {
+        "reason": "intrinsically_short_history",
+        "detail": "This fund only has 22 months of history in total (under 36 months) \u2014 likely a recently-launched fund. Its own stats, not just the shared window, are based on limited data."
+      }
+    ],
+    "flags_119091": [
+      {
+        "reason": "low_variance_relative_to_group",
+        "detail": "Std dev (0.0679%) is under 10% of the group's median (4.7241%). Correlations involving this fund can be noisy \u2014 a handful of months can swing the coefficient with limited underlying signal."
+      }
+    ],
+    "flags_120754": [
+      {
+        "reason": "low_variance_relative_to_group",
+        "detail": "Std dev (0.4367%) is under 10% of the group's median (4.7241%). Correlations involving this fund can be noisy \u2014 a handful of months can swing the coefficient with limited underlying signal."
+      }
+    ],
+    "n_flagged_funds": 3
   }
 }

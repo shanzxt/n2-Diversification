@@ -80,30 +80,47 @@ schemecodes.py  →  verified_funds.json  →  fetchfunddata.py  →  funds_data
 
 **Last updated:** 2026-09-17
 
-**Phase: 1 — Client-side math engine, complete (validated in Python; JS port still pending).**
+**Phase: 1 — Client-side math engine, complete in both Python and JS.**
 
-- Built and validated: input conventions (aligned fund JSON, shared overlap
-  window per gotcha #10), core statistical primitives (mean, std dev,
-  covariance matrix, correlation matrix), portfolio-level formulas for
-  arbitrary weighted subsets of funds (return, std dev, Sharpe ratio —
-  `portfolio.py`), Jacobi eigen-decomposition of the correlation matrix
-  (`eigen.py`), entropy-based effective-N (diversification measured as
-  "effective number of independent bets," not just fund count), and a
-  confidence-flagging system (`confidence.py`) that distinguishes
-  portfolio-level facts (e.g. a short shared window) from genuinely
-  fund-specific concerns (short own-history, low-variance-driven
-  correlation noise). Full writeup of this session's work, including a bug
-  found and fixed in the confidence-flagging logic, in GOTCHAS.md
-  (gotchas #15–17).
-- **Headline number, now numerically confirmed:** across the current
-  44-fund universe, effective N ≈ **2.04** — despite ~45 nominally distinct
-  funds spanning 13 categories, the *effective* number of independent bets
-  is closer to 2 than 44 (top eigenvalue ≈37.49 of 44, i.e. ~85% of total
-  variance loads onto a single common factor). This is the newsletter's
-  core claim, and it's now backed by a real computation on real fund data
+- Built and validated (Python): input conventions (aligned fund JSON,
+  shared overlap window per gotcha #10), core statistical primitives
+  (mean, std dev, covariance matrix, correlation matrix), portfolio-level
+  formulas for arbitrary weighted subsets of funds (return, std dev,
+  Sharpe ratio — `portfolio.py`), Jacobi eigen-decomposition of the
+  correlation matrix (`eigen.py`), entropy-based effective-N
+  (diversification measured as "effective number of independent bets,"
+  not just fund count), and a confidence-flagging system
+  (`confidence.py`) that distinguishes portfolio-level facts (e.g. a
+  short shared window) from genuinely fund-specific concerns (short
+  own-history, low-variance-driven correlation noise). Full writeup of
+  that session's work, including a bug found and fixed in the
+  confidence-flagging logic, in GOTCHAS.md (gotchas #15–17).
+- **Built and validated (JS): all five modules ported to plain JS/Node**
+  (`js/overlap.js`, `js/maths.js`, `js/eigen.js`, `js/confidence.js`,
+  `js/portfolioMath.js`), tested against golden values dumped from the
+  Python reference implementation (`generate_fixtures.py` →
+  `js/fixtures.json`, regeneratable, never hand-edited) using Node's
+  built-in test runner (`node --test`, no new dependencies). All
+  fund-id-keyed structures use `Map` rather than plain objects, to avoid
+  JS's silent numeric-key reordering corrupting row/column order
+  downstream. The full pipeline — raw weights in, normalized, universe
+  stats computed, portfolio stats out — is exercised end-to-end by
+  `js/integration.test.js`, matching the shape Phase 2's UI will
+  actually call. Full writeup of this session's design decisions
+  (Map-vs-object, tolerance-vs-exact-equality, fixture discipline) in
+  GOTCHAS.md (gotcha #18).
+- **Headline number, now numerically confirmed in both languages:**
+  across the current 44-fund universe, effective N ≈ **2.04** — despite
+  ~45 nominally distinct funds spanning 13 categories, the *effective*
+  number of independent bets is closer to 2 than 44 (top eigenvalue
+  ≈37.49 of 44, i.e. ~85% of total variance loads onto a single common
+  factor). This is the newsletter's core claim, and it's now backed by a
+  real computation on real fund data, cross-validated Python-vs-JS,
   rather than an assertion.
-- Not yet started: Phase 2 (interactive animation/visualization) and the
-  JS port of this math engine for the browser.
+- **Not yet started: Phase 2 — interactive animation/visualization** (a
+  UI/UX prototype in an isolated sandbox, wiring the JS math engine up
+  to the toy-dataset → mean/stdev → portfolio-risk-formula animation
+  described in `../Ideas.txt`). This is the actual next unstarted phase.
 
 **Phase: 0 — Data pipeline.**
 

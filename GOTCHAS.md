@@ -398,3 +398,46 @@ claim (see `CLAUDE.md` status section): despite ~45 nominally distinct
 funds across 13 categories, the *effective* number of independent bets is
 closer to 2 than 44 — a concrete, computed illustration of the
 diversification thesis, not just an assertion.
+
+## JS port of the math engine (`js/overlap.js` / `maths.js` / `eigen.js` / `confidence.js` / `portfolioMath.js`) — session of 2026-09-17
+
+### 18. Design decisions worth remembering for the JS side specifically
+
+- **`Map`, not plain objects, for every fund-id-keyed structure that gets
+  iterated in a specific order** (means, stds, covariance matrix,
+  correlation matrix, confidence flags). Plain JS objects with
+  numeric-looking string keys (`{118632: ...}`) silently reorder on
+  iteration (JS coerces and sorts integer-like keys ahead of insertion
+  order), which would corrupt anything downstream that assumes
+  row/column order matches a given `fund_ids` list — e.g.
+  `correlationDictToMatrix` building a matrix for `jacobiEigen`.
+  `overlap.js` didn't need this (it doesn't build that kind of
+  structure), but every layer from `maths.js` onward does, and the
+  convention is now consistent across all of them.
+- **Tolerance-based, not exact-equality, checks for anything downstream
+  of Jacobi eigen-decomposition.** `overlap.js`/`maths.js` tests use
+  exact equality (`1e-9` at tightest) since those are deterministic
+  integer/string operations or straightforward floating-point sums that
+  should match Python bit-for-bit-ish. `eigen.js`/`portfolioMath.js`
+  tests use a wider tolerance (`1e-3`) for anything touching
+  eigenvalues/effective N, because Jacobi's cyclic-sweep convergence
+  order can differ slightly between the Python and JS implementations
+  even though the algorithm itself is identical — closeness, not exact
+  equality, is the right bar there.
+- **Fixture regeneration, not hand-editing.** `js/fixtures.json` is only
+  ever produced by running `generate_fixtures.py` against the current
+  Python reference implementation — never hand-copied from terminal
+  output or manually edited. This keeps the JS tests checked against
+  values that are actually reproducible from the data and code as they
+  currently stand, and means a future data/code change just means
+  rerunning the one script rather than re-deriving numbers by hand.
+- **`overlap.js`'s non-contiguous-gap guard was implemented but initially
+  untested** — none of the first three fixture cases (all 44 funds,
+  first two funds, single fund `119091`) happen to exercise a genuine
+  mid-series gap, since the real dataset's known historical gaps (e.g.
+  `119091`'s 2015-08 gap, gotcha #9) were already fixed via
+  interpolation before this port started. Verified the guard is present
+  and correct by hand, then added a synthetic fake-data test case
+  directly in `overlap.test.js` (rather than round-tripping through
+  Python) since this is testing error-throwing behavior identical in
+  both languages, not a golden numeric value.

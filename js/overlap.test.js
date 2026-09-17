@@ -38,3 +38,22 @@ test("getOverlapWindow — single fund (119091)", () => {
   const result = getOverlapWindow(fixture.fund_ids, data);
   assertWindowEqual(result, fixture.result);
 });
+
+test("getOverlapWindow — throws on a non-contiguous gap (synthetic data)", () => {
+  // The real dataset's known historical gaps (e.g. 119091's 2015-08 gap,
+  // see GOTCHAS.md gotcha #9) have already been fixed via interpolation,
+  // so there's no live example left in funds_aligned.json to exercise
+  // this guard. None of the three fixture cases above hit it either
+  // (they all happen to be genuinely contiguous). Synthesize a minimal
+  // fake dataset with a real mid-series null gap instead, mirroring
+  // Python's ValueError for a non-contiguous overlap window.
+  const fakeData = {
+    dates: ["2020-01", "2020-02", "2020-03", "2020-04", "2020-05"],
+    funds: [{ id: 1, returns: [0.01, null, 0.02, 0.03, 0.01] }],
+  };
+
+  assert.throws(
+    () => getOverlapWindow([1], fakeData),
+    /not contiguous/
+  );
+});

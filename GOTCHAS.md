@@ -263,7 +263,7 @@ silently produce a misleading std of 0 rather than a real error).
 with the window's dates included in the message, so a too-short overlap
 window fails loudly instead of returning a silently-wrong 0.
 
-### 12. `119091` (HDFC Liquid Fund) shows an unexpectedly high correlation (~0.48) with equity fund `118632` over the current 22-month window — not yet root-caused
+### 12. `119091` (HDFC Liquid Fund) shows an unexpectedly high correlation (~0.48) with equity fund `118632` over the current 22-month window — root-caused
 
 Liquid/debt funds should show near-zero correlation with equity funds under
 normal circumstances, so 0.48 stands out. Likely explanation: `119091`'s
@@ -273,13 +273,15 @@ correlation against a near-zero-variance series is highly noisy — a couple
 of coincidental co-movements can swing the coefficient a lot with no real
 economic relationship behind it.
 
-**Status: not fully root-caused.** We haven't yet eyeballed the paired
-monthly returns side by side to confirm it's noise vs. a data artifact vs.
-a real short-window effect. **Flag:** treat any correlation involving
-`119091` (and potentially other low-volatility/debt funds) as
-lower-confidence until this is investigated further — e.g. by printing the
-paired return series for `119091` vs `118632` over the window and checking
-whether the correlation is driven by one or two outlier months.
+**Status: root-caused via `investigate_119091.py`.** Two months (2026-04,
+2025-03) account for 73% of the total covariance between `119091` and
+`118632` across the 22-month window; excluding just the single largest
+contributor swings correlation from 0.4777 to 0.3062. This confirms the
+near-zero-variance + short-window noise hypothesis above — it's not a data
+quality issue, it's a structural low-confidence situation for this fund's
+correlation figures under the current window. **No fix needed** — this is
+now covered going forward by the confidence-flagging mechanism (see
+`confidence.py`), rather than needing a one-off patch.
 
 Note: this is a separate, unrelated quirk from gotcha #9 above (the
 2015-08 interpolation) — same fund (`119091`), two different data
@@ -313,7 +315,38 @@ peculiarities to keep in mind when working with it.
   each other via the diagonal check in #13.
 - `EXCLUDED_FUND_IDS = [145552]` (Motilal Oswal Nasdaq 100 FOF — see
   gotcha #4/#5 for its scheme-code history) is excluded from
-  `maths.py`'s computations, but the *reason* for the exclusion isn't
-  documented anywhere yet. **TODO: find/record why before relying on
-  this list being complete or correct** — don't assume it's still valid
-  without checking.
+  `maths.py`'s computations. Reason, now confirmed: 145552 is an
+  International/US Equity fund-of-fund (tracks the Nasdaq 100), not a
+  domestic Indian equity/debt fund, and it's excluded for two distinct
+  reasons:
+  1. **Out of scope for the diversification thesis.** The newsletter's
+     thesis is specifically about correlation among ~500 underlying
+     Indian stocks sliced different ways (large/mid/small cap, sector,
+     style, etc.). A US-market FOF carries a fundamentally different risk
+     factor (Nasdaq-100 index risk + USD/INR currency risk), so it isn't
+     a comparable domestic bet and doesn't belong in the same
+     correlation/covariance universe.
+  2. **Statistical outlier.** Its returns are extreme relative to the
+     rest of the universe (Motilal Oswal factsheet, checked 2026-09-13:
+     3Y CAGR 38.39%, 7Y CAGR 29.04%) and would skew mean/eigenvalue
+     calculations without representing a genuinely comparable domestic
+     risk.
+  - This is a **scope exclusion, not a dead-fund exclusion** — confirmed
+    145552 is still an active, open, live fund (not discontinued). Don't
+    conflate this with funds excluded because they're closed/dead; those
+    are a different category and would need different handling if they
+    ever come up.
+- **Short-window disclaimer policy (standing decision, not a bug):** any
+  fund whose effective computation window is short relative to its own
+  full history, or whose stats are based on materially less data than
+  most of the universe, should carry an explicit "short window"
+  disclaimer wherever its stats are surfaced, rather than being presented
+  as equally reliable as funds with full multi-year histories. This
+  applies today to `119091` (HDFC Liquid Fund — see gotcha #12, correlation
+  and other stats computed under the current 22-month shared
+  `get_overlap_window`, far shorter than its own full NAV history) and to
+  any newly-launched fund like `152881` (see gotcha #11) whose short
+  history is intrinsic, not just a windowing artifact. Applies now to
+  console output; carry it forward into the UI in Phase 2/3 (e.g. a
+  visible badge/footnote next to that fund's numbers) rather than
+  re-deciding this later.

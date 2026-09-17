@@ -15,7 +15,9 @@ from confidence import compute_confidence_flags, compute_portfolio_window_note
 
 # 91-day T-bill yield, per the earlier risk-free-rate decision. Hardcoded
 # for now — update periodically, don't wire up a live API for this.
-RISK_FREE_RATE_ANNUAL = 0.065  # placeholder — replace with current RBI 91-day T-bill cutoff yield
+# Source: RBI 91-day T-bill auction cut-off yield, 5.2089%, auction dated
+# 2026-09-09 (most recent auction as of the date checked). Checked 2026-09-17.
+RISK_FREE_RATE_ANNUAL = 0.052089
 
 
 def normalize_weights(raw_weights):

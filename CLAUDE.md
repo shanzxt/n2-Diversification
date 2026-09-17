@@ -78,7 +78,32 @@ schemecodes.py  →  verified_funds.json  →  fetchfunddata.py  →  funds_data
 
 ## Status (update this section every work session)
 
-**Last updated:** 2026-09-12
+**Last updated:** 2026-09-17
+
+**Phase: 1 — Client-side math engine, complete (validated in Python; JS port still pending).**
+
+- Built and validated: input conventions (aligned fund JSON, shared overlap
+  window per gotcha #10), core statistical primitives (mean, std dev,
+  covariance matrix, correlation matrix), portfolio-level formulas for
+  arbitrary weighted subsets of funds (return, std dev, Sharpe ratio —
+  `portfolio.py`), Jacobi eigen-decomposition of the correlation matrix
+  (`eigen.py`), entropy-based effective-N (diversification measured as
+  "effective number of independent bets," not just fund count), and a
+  confidence-flagging system (`confidence.py`) that distinguishes
+  portfolio-level facts (e.g. a short shared window) from genuinely
+  fund-specific concerns (short own-history, low-variance-driven
+  correlation noise). Full writeup of this session's work, including a bug
+  found and fixed in the confidence-flagging logic, in GOTCHAS.md
+  (gotchas #15–17).
+- **Headline number, now numerically confirmed:** across the current
+  44-fund universe, effective N ≈ **2.04** — despite ~45 nominally distinct
+  funds spanning 13 categories, the *effective* number of independent bets
+  is closer to 2 than 44 (top eigenvalue ≈37.49 of 44, i.e. ~85% of total
+  variance loads onto a single common factor). This is the newsletter's
+  core claim, and it's now backed by a real computation on real fund data
+  rather than an assertion.
+- Not yet started: Phase 2 (interactive animation/visualization) and the
+  JS port of this math engine for the browser.
 
 **Phase: 0 — Data pipeline.**
 

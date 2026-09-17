@@ -350,3 +350,51 @@ peculiarities to keep in mind when working with it.
   console output; carry it forward into the UI in Phase 2/3 (e.g. a
   visible badge/footnote next to that fund's numbers) rather than
   re-deciding this later.
+
+## `eigen.py` / `confidence.py` / `portfolio.py` (Jacobi eigen-decomposition, confidence flagging, portfolio-level formulas) — session of 2026-09-17
+
+### 15. `jacobi_eigen` validated against a toy 3-fund worked example before trusting it on real data
+
+Before running the Jacobi eigenvalue decomposition on the real 44-fund
+correlation matrix, `eigen.py`'s `__main__` first runs it against a toy
+3x3 correlation matrix (funds A and B correlated 0.9, fund C nearly
+independent at 0.1). Expected eigenvalues ~[1.9, 1.0, 0.1] and effective
+N ~2.16 — actual result [1.9217, 0.9783, 0.1], effective N 2.1471, both
+matching intuition (two near-duplicate funds collapse toward one
+effective factor, the independent third fund adds close to a full unit
+of diversification). Same eyeball-before-trusting pattern as gotcha #13's
+real-world checks.
+
+### 16. `confidence.py`'s `short_window_vs_own_history` check originally flagged 43 of 44 funds — conflated a portfolio-level fact with a per-fund concern (FIXED)
+
+The original version of this check compared each fund's own full history
+length against the current *shared* overlap window (see gotcha #10) and
+flagged any fund whose own history was longer than the shared window —
+which is true of nearly every fund whenever one recently-launched fund
+(currently `152881`) is forcing a short shared window. That's not a
+fund-specific concern; it's a single fact about the selection as a whole
+that was being wrongly repeated as 43 individual flags, drowning out the
+handful of flags that actually matter per-fund.
+
+**Fix:** split into two distinct outputs:
+- `compute_portfolio_window_note` — ONE note about the shared window
+  itself when it's short, naming the bottleneck fund that's forcing it
+  (see `portfolio_window_note` in `portfolio.py`'s output).
+- `compute_confidence_flags` — genuinely fund-specific flags only:
+  `intrinsically_short_history` (a fund's *own* full history is short,
+  independent of any shared window — e.g. `152881` itself) and
+  `low_variance_relative_to_group` (a fund's std dev is under 10% of the
+  group's median — e.g. `119091`, see gotcha #12).
+
+### 17. Real 44-fund result: effective N ≈ 2.04, ~85% of variance in one factor
+
+Running `eigen.py` against the full 44-fund universe (via `funds_aligned.json`,
+current shared window per gotcha #10): eigenvalue sum check passes
+(44.000000 ≈ 44), effective N ≈ **2.0403**, and the top eigenvalue is
+**≈37.49** out of 44 — i.e. roughly 85% of total variance across the
+universe loads onto a single common factor, with the remaining ~15%
+spread across the other 43. This is the newsletter's core numerical
+claim (see `CLAUDE.md` status section): despite ~45 nominally distinct
+funds across 13 categories, the *effective* number of independent bets is
+closer to 2 than 44 — a concrete, computed illustration of the
+diversification thesis, not just an assertion.

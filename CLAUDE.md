@@ -83,6 +83,79 @@ schemecodes.py  →  verified_funds.json  →  fetchfunddata.py  →  funds_data
 **Phase: 2 — Interactive fund-picker tool, built and live in the Shan
 website repo (`github.com/shanzxt/Shan`, `D:\Shan\Shan\Website`).**
 
+- **Two bug fixes this session:**
+  - **Single-fund selection stats bug (`FundPickerTool.jsx`)**: selecting
+    exactly one fund was unconditionally reusing the precomputed
+    44-fund-universe window/stats (the deliberately short ~22-month
+    window from gotcha #10), rather than that fund's own full history —
+    causing wrong return/std/Sharpe and a spurious "shared window is
+    shorter than usual" note (structurally meaningless for n=1). Fixed
+    by special-casing `weights.size === 1` to compute a fresh
+    `getOverlapWindow([singleId], fundsData)` and call
+    `computePortfolioStats` against just that fund, leaving all n≥2
+    selections (including both presets, whose `expectedEffectiveN`
+    values depend on the universe-wide window) untouched. Verified via
+    UTI Nifty 50 Index Fund (id 120716): before 0.73% return / 14.03%
+    std / -0.25 Sharpe / spurious note; after 11.72% return / 15.73%
+    std / 0.46 Sharpe / no note — matching its real 163-month history.
+    Committed/pushed (`ef30400`).
+  - **Correlation heatmap color scale (`CorrelationHeatmap.jsx`)**: the
+    old `colorForCorrelation` faded both branches from the dark
+    background color, so any positive correlation (nearly all real fund
+    pairs, since the dataset's ~85%-single-factor structure means even
+    the "diversifying" HDFC Liquid Fund lands at a noisy +0.46 per
+    gotcha #12) only ever mixed toward amber — cells varied in
+    lightness, never crossed hue, so low-positive correlations read as
+    dim/muddy amber rather than a genuinely distinct color. Fixed with a
+    direct RGB lerp between teal and amber across the full `[-1, 1]`
+    range (checked against an HSL lerp, which swings through an
+    off-palette green/lime midtone — rejected), and unified the legend
+    gradient onto the same two-stop scale. Verified live: HDFC Liquid
+    Fund's row/column now renders as clearly olive/teal-shifted against
+    the all-amber equity funds under the "Add the debt fund" preset.
+    Committed/pushed (`7f075e7`).
+- **Heatmap color scale made dynamic, plus a new perceived-vs-actual
+  diversification visual** (same session, follow-up to the color-hue
+  fix above; full writeup in GOTCHAS.md gotchas #22-23): the hue-blend
+  fix alone still used a fixed [-1, 1] domain, which compresses this
+  dataset's real correlations (roughly 0.3-0.98) into a narrow band —
+  `colorForCorrelation` now anchors teal/amber to the min/max
+  off-diagonal correlation actually present in the current selection,
+  so the same raw correlation value can render differently depending
+  on what else is selected (intentional — relative contrast within
+  what's on screen, not an absolute scale). Correlation numbers now
+  render directly inside each cell (dropped above 10 funds to avoid
+  illegible overlap), and the legend shows the live min/max alongside
+  the endpoint labels. Added `DiversificationBars.jsx`: two
+  directly-comparable bars below the heatmap — one sliced evenly by
+  nominal fund weight ("what it looks like you own"), one sliced by
+  the selection's own correlation-matrix eigenvalues, long tail grouped
+  into "the rest" ("what you actually own") — making the effective-N
+  thesis legible as a shape. Required exposing raw `eigenvalues` from
+  `computePortfolioStats` (additive field, all 14 tests still pass
+  unmodified). Verified live across the all-equity preset (effective N
+  1.24, one dominant amber factor) and +debt-fund preset (effective N
+  1.66, visibly smaller dominant factor + real teal "rest" segment),
+  and confirmed n=1 selections correctly render neither the heatmap nor
+  the bars. Committed/pushed (`eadb09e`).
+- **Self-explanatory pass**: the tool now teaches its own numbers rather
+  than assuming the reader knows what they mean — a start-here
+  instruction above the fund list, weight sliders relabeled as live
+  normalized percentages (reusing the engine's own `normalizeWeights`,
+  no second normalization path), a correlation-heatmap caption plus a
+  real inline color-scale legend using the heatmap's own color tokens, a
+  dynamic "You're holding N funds but making about M genuinely different
+  bets" payoff sentence with a one-time dismissible tooltip bridging back
+  to the intro animation's eigenvalue math, a "try it" framing line above
+  the presets plus a transient dynamically-computed "that's a real jump —
+  from ~X to ~Y" note after a preset click (explicitly ordered never to
+  overlap the one-time tooltip), a "worth knowing" heading above the
+  confidence notes, and a caption under the stats row. All copy/visual
+  only — math engine, heatmap computation, and stats calculations
+  untouched. Verified live across manual (non-preset) selections at 1, 2,
+  and 3 funds (correct singular/plural grammar each time) and the
+  debt-fund-clicked-first edge case (tooltip fires, jump note correctly
+  suppressed). Committed and pushed to `main` (`5a5949d`).
 - The math engine (`js/overlap.js`, `maths.js`, `eigen.js`,
   `confidence.js`, `portfolioMath.js`) was ported as-is (ESM conversion
   only, no reimplemented math) into `src/lib/portfolioEngine/` in the

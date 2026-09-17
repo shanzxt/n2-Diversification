@@ -502,5 +502,120 @@ real rendering bug. Worth remembering: a garbled screenshot right after a
 capture timeout should be cross-verified against actual DOM content before
 concluding there's a real application bug.
 
+### 21. Single-fund selection reused the 44-fund universe's truncated shared window, corrupting standalone stats (FIXED)
+
+**Problem:** picking exactly one fund and setting it to 100% weight showed
+wrong annualized return/std dev/Sharpe for that fund, plus a "shared
+window is shorter than usual for this selection" confidence note — a note
+that's structurally meaningless for a single fund, since the "shared
+window" concept only exists to handle overlap *between* multiple funds.
+Concretely, for UTI Nifty 50 Index Fund (id `120716`): showed 0.73%
+annualized return / 14.03% std dev / -0.25 Sharpe, plus the spurious note.
+
+**Root cause:** `FundPickerTool.jsx`'s `stats` computation unconditionally
+passed the precomputed `UNIVERSE_FUND_IDS`/`UNIVERSE_WINDOW` (and the
+matrices sliced from them) into `computePortfolioStats`, regardless of
+actual selection size. `UNIVERSE_WINDOW` is the deliberately short
+~22-month shared window described in gotcha #10 above (driven by fund
+`152881`'s late inception) — correct and necessary for multi-fund/
+universe-level comparisons (both presets' `expectedEffectiveN` values
+depend on it), but wrong for a single fund, which has no one to share a
+window with and should just use its own full history.
+
+**Fix:** special-cased `weights.size === 1` in `FundPickerTool.jsx` to
+compute a fresh `getOverlapWindow([singleId], fundsData)` for just that
+fund and call `computePortfolioStats` against it alone, instead of
+slicing into the universe-wide precomputed stats. All n≥2 selections,
+including both presets, are untouched — they still correctly use the
+universe-wide window (and, for n≥2, the "shared window is shorter than
+usual" note is legitimate when it fires, since real overlap is being
+computed).
+
+**Before/after (UTI Nifty 50 Index Fund, id `120716`, its real history is
+163 months, 2013-02 to 2026-08):**
+
+| | before | after |
+|---|---|---|
+| annualized return | 0.73% | 11.72% |
+| annualized std dev | 14.03% | 15.73% |
+| Sharpe ratio | -0.25 | 0.46 |
+| window note | shown (spurious) | not shown |
+
+**Status:** fixed, committed (`ef30400` in the Shan repo). `overlap.js`,
+`portfolioMath.js`, and `confidence.js` themselves were all correct —
+this was purely a caller-side argument-selection bug in the UI layer, not
+an engine bug.
+
+### 22. Correlation heatmap color scale: fixing the hue-blend bug alone wasn't enough — needed a dynamic range too
+
+**Problem (original bug):** the heatmap's `colorForCorrelation` faded
+*both* directions from the dark background color (`mix(BG, TEAL, ...)`
+for r ≤ 0, `mix(BG, ACCENT, ...)` for r > 0). Since real fund pairs in
+this dataset are almost always positively correlated (the whole point of
+the newsletter's thesis — see gotcha #17's ~85%-single-factor result),
+every cell only ever mixed toward amber, varying in lightness but never
+actually crossing hue to teal. A moderate correlation like HDFC Liquid
+Fund vs. equity funds (~0.46-0.48, itself a known noise artifact — see
+gotcha #12) rendered as a dim, muddy amber, visually indistinguishable in
+*kind* from a highly-correlated equity-equity pair, just dimmer.
+
+**First fix (`7f075e7`):** replaced the background-anchored two-branch mix
+with a direct RGB lerp straight between `TEAL` and `ACCENT` across the
+full `[-1, 1]` range. Checked an HSL lerp between the same two colors as
+an alternative — rejected because it swings through a bright green/lime
+hue at the midpoint (an off-palette third hue not used anywhere else in
+the design), which read as more jarring, not less muddy, than the RGB
+version.
+
+**Why that alone wasn't sufficient:** a *fixed* `[-1, 1]` domain is still
+wrong for this dataset, even with correct hue-crossing math. Real
+correlations here cluster tightly in a narrow high-positive band
+(roughly 0.3 to 0.98 — see gotcha #17), so anchoring the gradient to the
+full theoretical range still compresses all real variation into a small
+slice near the amber end. The fix that actually solves the *design*
+problem (not just the hue bug) is anchoring the gradient to the min/max
+correlation actually present in the current selection, computed fresh
+over off-diagonal pairs only (excluding the trivial self-correlation of
+1 on the diagonal, which would otherwise always pin the "amber end" of
+the scale at 1 regardless of the real spread between distinct funds).
+
+**Second fix (`eadb09e`):** `colorForCorrelation` now takes `domainMin`/
+`domainMax`, computed per-render from the current selection's off-diagonal
+correlations (with a small widening guard for the degenerate 2-fund case,
+where there's only one symmetric pair value and min === max). The same
+raw correlation value can now render differently depending on what else
+is selected — intentional: the scale shows relative spread within what's
+on screen, not an absolute universal one. The legend gradient bar shows
+the live min/max values at each end, not just the "moves together"/
+"moves independently" text labels. Also added the correlation number as
+text directly inside each cell (IBM Plex Mono, dark/light text chosen per
+cell by luminance) so exact values don't require hovering — dropped above
+10 selected funds, where n² cells would make the text illegible.
+
+**Status:** fixed, committed (`7f075e7` then `eadb09e` in the Shan repo).
+Verified live: HDFC Liquid Fund's row/column reads clearly teal-shifted
+against all-amber equity pairs under the "Add the debt fund" preset, and
+the 7-fund all-equity selection's cell range (0.86-1.00) visibly spreads
+across the full teal-to-amber gradient instead of bunching near one end.
+
+### 23. "Perceived vs. actual" diversification bars added — eigenvalues now exposed from `computePortfolioStats`
+
+**Not a bug — a new visual, noted here because it required a small,
+easy-to-miss engine change.** `computePortfolioStats` (`portfolioMath.js`)
+previously computed the selected subset's eigenvalues internally (to
+derive `effective_n` via `computeEffectiveN`) but discarded them —
+`effective_n` was the only eigen-derived value returned. The new
+`DiversificationBars.jsx` component needs the raw per-factor breakdown
+(not just the summary number) to render a bar sliced by each factor's
+share of total variance, so `computePortfolioStats` now also returns
+`eigenvalues` (raw array, same order as `selectedIds`, sum equals
+`selectedIds.length` per the existing `sanityCheckEigenvaluesSumToN`
+check). Purely additive — no existing field changed, all 14 JS tests
+(which assert specific fields, not full deep-equality on the return
+object) still pass unmodified.
+
+**Status:** shipped alongside gotcha #22's heatmap fix, committed
+(`eadb09e` in the Shan repo).
+
 **Status:** fixed and verified live (hover works correctly at 9 selected
 funds, correct tooltip values, no freeze).

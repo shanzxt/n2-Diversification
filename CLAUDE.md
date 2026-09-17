@@ -114,30 +114,36 @@ website repo (`github.com/shanzxt/Shan`, `D:\Shan\Shan\Website`).**
     Fund's row/column now renders as clearly olive/teal-shifted against
     the all-amber equity funds under the "Add the debt fund" preset.
     Committed/pushed (`7f075e7`).
-- **Heatmap color scale made dynamic, plus a new perceived-vs-actual
-  diversification visual** (same session, follow-up to the color-hue
-  fix above; full writeup in GOTCHAS.md gotchas #22-23): the hue-blend
-  fix alone still used a fixed [-1, 1] domain, which compresses this
-  dataset's real correlations (roughly 0.3-0.98) into a narrow band —
-  `colorForCorrelation` now anchors teal/amber to the min/max
-  off-diagonal correlation actually present in the current selection,
-  so the same raw correlation value can render differently depending
-  on what else is selected (intentional — relative contrast within
-  what's on screen, not an absolute scale). Correlation numbers now
-  render directly inside each cell (dropped above 10 funds to avoid
-  illegible overlap), and the legend shows the live min/max alongside
-  the endpoint labels. Added `DiversificationBars.jsx`: two
-  directly-comparable bars below the heatmap — one sliced evenly by
-  nominal fund weight ("what it looks like you own"), one sliced by
-  the selection's own correlation-matrix eigenvalues, long tail grouped
-  into "the rest" ("what you actually own") — making the effective-N
-  thesis legible as a shape. Required exposing raw `eigenvalues` from
-  `computePortfolioStats` (additive field, all 14 tests still pass
-  unmodified). Verified live across the all-equity preset (effective N
-  1.24, one dominant amber factor) and +debt-fund preset (effective N
-  1.66, visibly smaller dominant factor + real teal "rest" segment),
-  and confirmed n=1 selections correctly render neither the heatmap nor
-  the bars. Committed/pushed (`eadb09e`).
+- **Heatmap color scale made dynamic** (same session, follow-up to the
+  color-hue fix above; full writeup in GOTCHAS.md gotcha #22): the
+  hue-blend fix alone still used a fixed [-1, 1] domain, which compresses
+  this dataset's real correlations (roughly 0.3-0.98) into a narrow band —
+  `colorForCorrelation` now anchors teal/amber to the min/max off-diagonal
+  correlation actually present in the current selection, so the same raw
+  correlation value can render differently depending on what else is
+  selected (intentional — relative contrast within what's on screen, not
+  an absolute scale). Correlation numbers now render directly inside each
+  cell (dropped above 10 funds to avoid illegible overlap), and the legend
+  shows the live min/max alongside the endpoint labels. Committed/pushed
+  (`eadb09e`).
+- **"What it looks like vs. what it actually is" 3D floor scene**
+  (replaces an earlier two-bar version of this same comparison from the
+  same session — see GOTCHAS.md gotchas #23 and #25 for the full history):
+  each selected fund is a sphere floating above a tilted CSS-3D floor
+  (no WebGL/three.js), with its shadow marking its *real* position — the
+  fund's loading on the selection's own top two eigenvectors, the same
+  Jacobi decomposition that already powers `effective_n`. Funds loading
+  onto the same dominant common factor land close together on the floor
+  even when their spheres float apart in the air. Required exposing
+  `eigenvectors` from `computePortfolioStats` (additive field, `jacobiEigen`
+  already computed them, just discarded — all 14 tests still pass
+  unmodified) and, after an initial bug where the whole cluster pinned to
+  one corner (Perron-Frobenius: the dominant eigenvector's loadings are
+  almost always same-signed), recentering each fund's position on the
+  selection's own mean projection. Verified live across the all-equity
+  preset (tight centered cluster), the +debt-fund preset (HDFC Liquid Fund
+  clearly separates, teal-shadowed, named in a dynamic callout line), and
+  a manual non-preset 3-fund selection. Committed/pushed (`8052377`).
 - **Self-explanatory pass**: the tool now teaches its own numbers rather
   than assuming the reader knows what they mean — a start-here
   instruction above the fund list, weight sliders relabeled as live

@@ -615,7 +615,78 @@ check). Purely additive — no existing field changed, all 14 JS tests
 object) still pass unmodified.
 
 **Status:** shipped alongside gotcha #22's heatmap fix, committed
-(`eadb09e` in the Shan repo).
+(`eadb09e` in the Shan repo). **Superseded by gotcha #25 below** — the
+two-bar visual this entry documents was replaced with a 3D floor scene in
+a later session; `DiversificationBars.jsx` no longer exists.
 
 **Status:** fixed and verified live (hover works correctly at 9 selected
 funds, correct tooltip values, no freeze).
+
+### 24. `sanityCheckEigenvaluesSumToN` is a good example of why every layer should self-check, not just the final output
+
+Not a bug in itself — a design note worth keeping visible. `portfolioMath.js`
+calls `sanityCheckEigenvaluesSumToN` on every `computePortfolioStats` call
+(not just in tests), so a Jacobi non-convergence or an eigenvector-exposure
+mistake (see gotcha #25) would throw loudly in the browser rather than
+silently feeding a slightly-wrong `effective_n` or floor position to the
+UI. Kept this pattern in mind when deciding to expose `eigenvectors`
+alongside `eigenvalues` in gotcha #25 — the existing sanity check covers
+both, since it validates the same decomposition both fields come from.
+
+### 25. 3D "what looks like vs. what actually is" floor scene replaced the two-bar visual — eigenvectors exposed, needed a recentering fix
+
+**Context:** the two-bar comparison from gotcha #23 (one bar sliced by
+nominal weight, one by eigenvalue share) was replaced with a genuinely 3D
+scene (CSS 3D transforms, no WebGL/three.js): each selected fund is a
+sphere floating above a tilted floor, with its shadow marking its *real*
+position — that position is the fund's loading on the selection's own top
+two eigenvectors (the same Jacobi decomposition that already powers
+`effective_n`), not a second, independently-computed layout. Funds that
+load similarly onto the dominant common factor land close together on the
+floor even when their spheres are spread apart in the air.
+
+**Engine change:** `jacobiEigen` (`eigen.js`) already computed eigenvectors
+as part of its normal Jacobi rotation sweep (the `v` matrix), but only the
+eigenvalues (`a[i][i]`) were ever consumed downstream — `v` was returned by
+`jacobiEigen` itself but discarded at the `computePortfolioStats` call site
+(`const [eigenvalues] = jacobiEigen(...)`). Fixed by capturing the second
+return value and adding it to `computePortfolioStats`'s return object as
+`eigenvectors` (`eigenvectors[i][k]` = fund `i`'s component, in
+`selectedIds` order, on eigenvector `k`, same unsorted index space as
+`eigenvalues`). Purely additive, no second decomposition run — all 14 JS
+tests still pass unmodified.
+
+**Bug found and fixed during build: raw eigen-projections cluster in one
+corner, not around a visual center.** Positioning each fund at
+`(x, z) = (eigenvector[i][k0] * sqrt(eigenvalue[k0]), eigenvector[i][k1] *
+sqrt(eigenvalue[k1]))` (top two eigenvectors, by eigenvalue) initially
+pinned the entire selection's cluster into one corner of the floor rather
+than spreading around the grid's center. Root cause: by the
+Perron-Frobenius property, the *dominant* eigenvector's components are
+almost always all the same sign when the underlying correlation matrix is
+mostly positive (true for nearly every real fund pair in this dataset,
+per gotcha #17) — so the x-axis (driven by that dominant eigenvector)
+never actually crosses zero, it just varies in magnitude on one side.
+Visually, the whole selection drifted to one edge of the floor instead of
+centering, which made the "tight cluster" payoff harder to read.
+
+**Fix:** subtract the selection's own mean projection (`meanX`, `meanZ`)
+from every fund's raw `(x, z)` before scaling to the display range. Only
+relative distances between funds carry meaning here (how tightly they
+cluster relative to each other), not their position relative to the
+abstract eigenspace origin — recentering on the selection's own centroid
+makes the floor always visually center on whatever is currently selected,
+regardless of which sign the dominant eigenvector happens to take.
+
+**Verified live:** all-equity preset (7 funds) renders as a tight,
+centered cluster of amber/olive-shadowed spheres; the "+debt fund" preset
+(8 funds) shows the same tight cluster plus HDFC Liquid Fund's shadow
+clearly separated and teal-colored, with a dynamic callout line naming it
+("HDFC Liquid Fund...'s shadow lands clearly apart from the rest"). Also
+checked a manual, non-preset 3-fund selection (Nippon India Large Cap,
+HDFC Liquid, UTI Nifty 50 Index) — HDFC Liquid separates from the other
+two exactly as its ~0.46-0.48 correlation (vs. ~0.97 between the other
+two) predicts. No console errors across any of these.
+
+**Status:** shipped, committed (`8052377` in the Shan repo, replacing
+`eadb09e`'s `DiversificationBars.jsx` with `DiversificationScene.jsx`).
